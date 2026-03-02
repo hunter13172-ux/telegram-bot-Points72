@@ -1,6 +1,5 @@
 import json
 import os
-import asyncio
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
@@ -70,7 +69,7 @@ async def take(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # ==========================
-# 🏆 عرض الترتيب
+# 🏆 ترتيب
 # ==========================
 async def top(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not db:
@@ -88,7 +87,7 @@ async def top(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ==========================
 # 🚀 تشغيل البوت
 # ==========================
-async def main():
+def main():
     if not TOKEN:
         raise ValueError("TOKEN غير موجود")
 
@@ -99,11 +98,8 @@ async def main():
     app.add_handler(CommandHandler("top", top))
 
     print("🚀 Bot Running...")
-    await app.initialize()
-    await app.start()
-    await app.updater.start_polling()
-    await app.stop()
+    app.run_polling()
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
