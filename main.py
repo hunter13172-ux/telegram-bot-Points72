@@ -16,7 +16,6 @@ def load_db():
             with open(FILE, "r", encoding="utf-8") as f:
                 return json.load(f)
         except json.JSONDecodeError:
-            # إذا الملف تالف نعيد قاموس فارغ بدل كسر البوت
             return {}
         except Exception:
             return {}
@@ -24,7 +23,6 @@ def load_db():
 
 
 def save_db(data):
-    # احفظ بالترميز UTF-8 عشان العربي يطلع مضبوط
     with open(FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
 
@@ -68,9 +66,8 @@ async def take(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"❌ تم سحب {amount} نقطة من {user}")
 
 
-# 📄 رصيد مستخدم (اختياري مفيد)
+# 📄 رصيد مستخدم
 async def balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # نجرب اسم من الوسيط أو اسم المستخدم اللي أرسل الأمر
     if context.args:
         user = context.args[0]
     else:
@@ -80,7 +77,7 @@ async def balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"🔸 رصيد {user}: {points} نقطة")
 
 
-# 🏆 ترتيب
+# 🏆 ترتيب أفضل 10
 async def top(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not db:
         return await update.message.reply_text("❌ لا توجد بيانات")
@@ -104,11 +101,12 @@ def main():
     app.add_handler(CommandHandler("give", give))
     app.add_handler(CommandHandler("take", take))
     app.add_handler(CommandHandler("top", top))
-    app.add_handler(CommandHandler("balance", balance))  # أمر اختياري
+    app.add_handler(CommandHandler("balance", balance))
 
     print("🚀 Bot Running...")
     app.run_polling()
 
 
-if name == "main":
+# ✅ التصحيح النهائي هنا
+if __name__ == "__main__":
     main()
