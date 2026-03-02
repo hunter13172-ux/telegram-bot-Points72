@@ -1,5 +1,6 @@
 import json
 import os
+import asyncio
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
@@ -7,7 +8,9 @@ TOKEN = os.getenv("TOKEN")
 FILE = "database.json"
 
 
+# ==========================
 # 📦 تحميل البيانات
+# ==========================
 def load_db():
     if os.path.exists(FILE):
         try:
@@ -26,7 +29,9 @@ def save_db(data):
 db = load_db()
 
 
+# ==========================
 # ➕ إضافة نقاط
+# ==========================
 async def give(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) != 2:
         return await update.message.reply_text("استخدم: /give اسم عدد")
@@ -44,7 +49,9 @@ async def give(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"✅ تم إعطاء {amount} نقطة لـ {user}")
 
 
+# ==========================
 # ➖ سحب نقاط
+# ==========================
 async def take(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) != 2:
         return await update.message.reply_text("استخدم: /take اسم عدد")
@@ -62,7 +69,9 @@ async def take(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"❌ تم سحب {amount} نقطة من {user}")
 
 
-# 🏆 ترتيب
+# ==========================
+# 🏆 عرض الترتيب
+# ==========================
 async def top(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not db:
         return await update.message.reply_text("❌ لا توجد بيانات")
@@ -76,7 +85,10 @@ async def top(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(text)
 
 
-def main():
+# ==========================
+# 🚀 تشغيل البوت
+# ==========================
+async def main():
     if not TOKEN:
         raise ValueError("TOKEN غير موجود")
 
@@ -87,8 +99,11 @@ def main():
     app.add_handler(CommandHandler("top", top))
 
     print("🚀 Bot Running...")
-    app.run_polling()
+    await app.initialize()
+    await app.start()
+    await app.updater.start_polling()
+    await app.stop()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
