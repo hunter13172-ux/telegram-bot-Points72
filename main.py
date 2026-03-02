@@ -13,24 +13,26 @@ FILE = "database.json"
 def load_db():
     if os.path.exists(FILE):
         try:
-            with open(FILE, "r") as f:
+            with open(FILE, "r", encoding="utf-8") as f:
                 return json.load(f)
-        except:
+        except json.JSONDecodeError:
+            # إذا الملف تالف نعيد قاموس فارغ بدل كسر البوت
+            return {}
+        except Exception:
             return {}
     return {}
 
 
 def save_db(data):
-    with open(FILE, "w") as f:
-        json.dump(data, f, indent=4)
+    # احفظ بالترميز UTF-8 عشان العربي يطلع مضبوط
+    with open(FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=4, ensure_ascii=False)
 
 
 db = load_db()
 
 
-# ==========================
 # ➕ إضافة نقاط
-# ==========================
 async def give(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) != 2:
         return await update.message.reply_text("استخدم: /give اسم عدد")
@@ -39,7 +41,7 @@ async def give(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         amount = int(context.args[1])
-    except:
+    except ValueError:
         return await update.message.reply_text("❌ الرقم غير صحيح")
 
     db[user] = db.get(user, 0) + amount
@@ -48,9 +50,7 @@ async def give(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"✅ تم إعطاء {amount} نقطة لـ {user}")
 
 
-# ==========================
 # ➖ سحب نقاط
-# ==========================
 async def take(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) != 2:
         return await update.message.reply_text("استخدم: /take اسم عدد")
@@ -59,7 +59,7 @@ async def take(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         amount = int(context.args[1])
-    except:
+    except ValueError:
         return await update.message.reply_text("❌ الرقم غير صحيح")
 
     db[user] = db.get(user, 0) - amount
@@ -68,9 +68,19 @@ async def take(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"❌ تم سحب {amount} نقطة من {user}")
 
 
-# ==========================
+# 📄 رصيد مستخدم (اختياري مفيد)
+async def balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # نجرب اسم من الوسيط أو اسم المستخدم اللي أرسل الأمر
+    if context.args:
+        user = context.args[0]
+    else:
+        user = update.effective_user.username or str(update.effective_user.id)
+
+    points = db.get(user, 0)
+    await update.message.reply_text(f"🔸 رصيد {user}: {points} نقطة")
+
+
 # 🏆 ترتيب
-# ==========================
 async def top(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not db:
         return await update.message.reply_text("❌ لا توجد بيانات")
@@ -84,22 +94,21 @@ async def top(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(text)
 
 
-# ==========================
 # 🚀 تشغيل البوت
-# ==========================
 def main():
     if not TOKEN:
-        raise ValueError("TOKEN غير موجود")
+        raise ValueError("TOKEN غير موجود. عيّن متغير البيئة TOKEN قبل التشغيل")
 
     app = Application.builder().token(TOKEN).build()
 
     app.add_handler(CommandHandler("give", give))
     app.add_handler(CommandHandler("take", take))
     app.add_handler(CommandHandler("top", top))
+    app.add_handler(CommandHandler("balance", balance))  # أمر اختياري
 
     print("🚀 Bot Running...")
     app.run_polling()
 
 
-if __name__ == "__main__":
+if name == "main":
     main()
